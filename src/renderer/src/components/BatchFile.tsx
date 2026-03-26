@@ -8,6 +8,8 @@ import { CSS } from '@dnd-kit/utilities';
 import useContextMenu from '../hooks/useContextMenu';
 import { dangerColor, primaryColor, primaryTextColor } from '../colors';
 
+const {shell} = window.require('electron');
+
 function BatchFile({ path, index, isOpen, isSelected, name, onSelect, onDelete, dragging }: {
   path: string,
   index: number,
@@ -21,9 +23,12 @@ function BatchFile({ path, index, isOpen, isSelected, name, onSelect, onDelete, 
   const ref = useRef<HTMLDivElement | null>(null);
 
   const { t } = useTranslation();
+
+  
   const contextMenuTemplate = useMemo(() => [
     { label: t('Remove'), click: () => onDelete?.(path) },
-  ], [t, onDelete, path]);
+    { label: t('Open folder'), click: () => shell.showItemInFolder(path) },
+  ], [t, onDelete, shell, path]);
 
   useContextMenu(ref, contextMenuTemplate);
 
