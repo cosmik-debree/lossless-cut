@@ -84,11 +84,9 @@ function BatchFile({ path, index, isOpen, isSelected, name, onSelect, onDelete, 
       title={path}
       onClick={handleClick}
     >
-      <FaFile style={{ color: isSelected ? primaryTextColor : undefined, flexShrink: 0, fontSize: '1em', marginRight: '.1em' }} />
-      <div style={{ flexShrink: 0, marginRight: '.1em' }}>{index + 1}.</div>
-      <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', direction: 'rtl' }}>
-        <span style={{ direction: 'ltr', unicodeBidi: 'isolate', display: 'inline-block' }}>{name}</span>
-      </div>
+      <FaFile size={14} style={{ color: isSelected ? primaryTextColor : undefined, flexShrink: 0 }} />
+      <div style={{ flexBasis: 4, flexShrink: 0 }} />
+      <div style={{ whiteSpace: 'nowrap', overflow: 'hidden' }}>{index + 1}. {name}</div>
       <div style={{ flexGrow: 1 }} />
       {onDelete && <FaTimes style={{ color: dangerColor, fontSize: '.9em', marginRight: '-.3em', flexShrink: 0, cursor: 'pointer', padding: '.3em' }} role="button" onClick={handleDeleteClick} />}
     </div>
