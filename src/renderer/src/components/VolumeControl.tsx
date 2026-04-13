@@ -16,7 +16,7 @@ function VolumeControl({ playbackVolume, setPlaybackVolume, onToggleMutedClick }
   useEffect(() => {
     const clear = () => clearTimeout(timeoutRef.current);
     clear();
-    timeoutRef.current = window.setTimeout(() => setVolumeControlVisible(false), 4000);
+    timeoutRef.current = window.setTimeout(() => setVolumeControlVisible(false), 30000);
     return () => clear();
   }, [playbackVolume, volumeControlVisible]);
 
