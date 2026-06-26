@@ -15,6 +15,7 @@ import prettyBytes from 'pretty-bytes';
 
 import useContextMenu from './hooks/useContextMenu';
 import useUserSettings from './hooks/useUserSettings';
+import useActionTitle from './hooks/useActionTitle';
 import { saveColor, controlsBackground, primaryTextColor, darkModeTransition } from './colors';
 import { useSegColors } from './contexts';
 import { getSegmentTags } from './segments';
@@ -147,7 +148,7 @@ const Segment = memo(({
       { type: 'separator' },
 
       { label: t('Segment tags'), click: () => onEditSegmentTags(index) },
-      { label: t('Extract frames as image files'), click: () => onExtractSegmentsFramesAsImages([seg]) },
+      { label: t('Extract segment frames as image files'), click: () => onExtractSegmentsFramesAsImages([seg]) },
     ];
   }, [invertCutSegments, t, addSegment, onLabelSelectedSegments, onRemoveSelected, onExtractSelectedSegmentsFramesAsImages, updateSegOrder, index, jumpSegStart, jumpSegEnd, onLabelPress, onRemovePress, onDuplicateSegmentClick, seg, onSelectSingleSegment, onSelectAllSegments, onDeselectAllSegments, onSelectAllMarkers, onSelectSegmentsByLabel, onSelectSegmentsByExpr, onInvertSelectedSegments, onMutateSegmentsByExpr, onReorderPress, onEditSegmentTags, onExtractSegmentsFramesAsImages]);
 
@@ -382,6 +383,7 @@ function SegmentList({
   const [draggingId, setDraggingId] = useState<UniqueIdentifier | undefined>();
 
   const { invertCutSegments, simpleMode, darkMode, springAnimation } = useUserSettings();
+  const actionTitle = useActionTitle();
 
   const getButtonColor = useCallback((seg: SegmentColorIndex | undefined, next?: boolean) => getSegColor(seg ? { segColorIndex: next ? seg.segColorIndex + 1 : seg.segColorIndex } : undefined).desaturate(0.3).lightness(darkMode ? 45 : 55).string(), [darkMode, getSegColor]);
   const currentSegColor = useMemo(() => getButtonColor(currentCutSeg), [currentCutSeg, getButtonColor]);
@@ -394,6 +396,8 @@ function SegmentList({
 
   const sortableList = useMemo(() => segmentsOrInverse.map((seg) => ({ id: seg.segId, seg })), [segmentsOrInverse]);
 
+  const isOnlyMarkers = useMemo(() => segmentsOrInverse.length > 0 && segmentsOrInverse.every((seg) => seg.end == null), [segmentsOrInverse]);
+
   function getHeader() {
     if (segmentsOrInverse.length === 0) {
       if (invertCutSegments) {
@@ -404,7 +408,7 @@ function SegmentList({
       return t('No segments to export.');
     }
 
-    if (segmentsOrInverse.every((s) => s.end == null)) {
+    if (isOnlyMarkers) {
       return t('Markers:');
     }
     return t('Segments to export:');
@@ -438,7 +442,7 @@ function SegmentList({
             size={24}
             style={{ ...buttonBaseStyle, background: nextSegmentColor }}
             role="button"
-            title={t('Add segment')}
+            title={actionTitle(t('Add segment'), 'addSegment')}
             onClick={addSegment}
           />
 
@@ -446,7 +450,7 @@ function SegmentList({
             size={24}
             style={{ ...buttonBaseStyle, ...(cutSegments.length > 0 ? { backgroundColor: currentSegColor } : disabledButtonStyle) }}
             role="button"
-            title={t('Remove cutpoint from segment {{segmentNumber}}', { segmentNumber: currentSegIndex + 1 })}
+            title={actionTitle(t('Remove cutpoint from segment {{segmentNumber}}', { segmentNumber: currentSegIndex + 1 }), 'removeCurrentCutpoint')}
             onClick={() => removeSegment(currentSegIndex)}
           />
 
@@ -454,7 +458,7 @@ function SegmentList({
             <>
               <FaSortNumericDown
                 size={16}
-                title={t('Change segment order')}
+                title={actionTitle(t('Change segment order'), 'reorderSegsByStartTime')}
                 role="button"
                 style={{ ...buttonBaseStyle, padding: 4, ...(cutSegments.length >= 2 ? { backgroundColor: currentSegColor } : disabledButtonStyle) }}
                 onClick={() => onReorderSegs(currentSegIndex)}
@@ -462,7 +466,7 @@ function SegmentList({
 
               <FaTag
                 size={16}
-                title={t('Label segment')}
+                title={actionTitle(t('Label segment'), 'labelCurrentSegment')}
                 role="button"
                 style={{ ...buttonBaseStyle, padding: 4, ...(cutSegments.length > 0 ? { backgroundColor: currentSegColor } : disabledButtonStyle) }}
                 onClick={() => onLabelSegment(currentSegIndex)}
@@ -472,7 +476,7 @@ function SegmentList({
 
           <AiOutlineSplitCells
             size={22}
-            title={t('Split segment at cursor')}
+            title={actionTitle(t('Split segment at cursor'), 'splitCurrentSegment')}
             role="button"
             style={{ ...buttonBaseStyle, padding: 1, ...(firstSegmentAtCursor ? { backgroundColor: segAtCursorColor } : disabledButtonStyle) }}
             onClick={splitCurrentSegment}
@@ -481,7 +485,7 @@ function SegmentList({
           {!invertCutSegments && (
             <FaRegCheckCircle
               size={22}
-              title={t('Invert segment selection')}
+              title={actionTitle(t('Invert segment selection'), 'invertSelectedSegments')}
               role="button"
               style={{ ...buttonBaseStyle, padding: 1, ...(cutSegments.length > 0 ? { backgroundColor: neutralButtonColor } : disabledButtonStyle) }}
               onClick={onInvertSelectedSegments}
@@ -530,6 +534,8 @@ function SegmentList({
     },
   }));
 
+  // todo https://github.com/TanStack/virtual/issues/1119
+  // eslint-disable-next-line react-hooks/incompatible-library
   const rowVirtualizer = useVirtualizer({
     count: sortableList.length,
     gap: 7,
@@ -639,7 +645,7 @@ function SegmentList({
           <span style={{ fontSize: '.8em' }}>{getHeader()}</span>
 
           <FaTimes
-            title={t('Close sidebar')}
+            title={actionTitle(t('Close sidebar'), 'toggleSegmentsList')}
             style={{ fontSize: '1.1em', verticalAlign: 'middle', color: 'var(--gray-11)', cursor: 'pointer', padding: '.2em .3em' }}
             role="button"
             onClick={toggleSegmentsList}
@@ -680,6 +686,12 @@ function SegmentList({
             {draggingSeg ? renderSegment({ seg: draggingSeg.seg, index: sortableList.indexOf(draggingSeg), dragging: true }) : null}
           </DragOverlay>
         </DndContext>
+
+        {isOnlyMarkers && (
+          <div style={{ padding: '1em .7em', color: 'var(--gray-11)', fontSize: '.85em' }}>
+            {t('Markers are segments without an end time and will not be exported. Convert markers to segments by setting their end time.')}
+          </div>
+        )}
 
         {renderFooter()}
       </motion.div>

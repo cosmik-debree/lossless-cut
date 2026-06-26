@@ -1,6 +1,6 @@
 # Contributing
 
-## [Translations](docs/translation.md)
+## [Translations / i18n](docs/translation.md)
 
 ## Development environment setup
 
@@ -11,6 +11,7 @@ Make sure you have at least Node v16. The app uses ffmpeg from PATH when develop
 git clone https://github.com/mifi/lossless-cut.git
 cd lossless-cut
 yarn
+yarn install-electron
 ```
 
 Note: `yarn` may take some time to complete.
@@ -28,11 +29,29 @@ yarn download-ffmpeg-win32-arm64
 
 For Windows, you may have to install [7z](https://www.7-zip.org/download.html), and then put the 7z folder in your `PATH`.
 
-### Running
+### Run app in development mode
 
 ```bash
 yarn dev
 ```
+
+### Run all code checks and tests
+
+Run linting, code style, types, tests etc with the following command:
+
+```bash
+yarn check
+```
+
+Most of these checks are automatically run in GitHub Actions.
+
+### Other scripts
+
+See [package.json](./package.json) "scripts" section.
+
+### Contributing code
+
+To contribute code, use [pull requests](https://github.com/mifi/lossless-cut/pulls). If you would like to contribute a lot of code, please first create an issue to check the viability of your change - the larger the PR you submit, the less likely that it will be merged.
 
 ## `mas-dev` (Mac App Store) local build
 
@@ -71,7 +90,7 @@ Before releasing, consider [Maintainence chores](#maintainence-chores) first.
 
 - `git checkout master`
 - `git merge stores` (in case there's an old unmerged stores hotfix)
-- **Manually prepare release notes** from [commit history](https://github.com/mifi/lossless-cut/commits/master/) since last version.
+- **Manually prepare release notes** from commit history (use `node script/getCommits.ts` to assist)
 - Create a new file `versions/x.y.z.md` and write the most important highlights from the release notes, but **remove github issue #references**
 - `node script/generateVersions.ts && git add versions/*.md src/renderer/src/versions.json && git commit -m 'Update change log'`
 - *If Store-only hotfix release*
@@ -96,6 +115,7 @@ Before releasing, consider [Maintainence chores](#maintainence-chores) first.
   - `git checkout master`
   - `git merge stores`
 - Bump [snap version](https://snapcraft.io/losslesscut/releases)
+- Copy paste release notes and post to discord & twitter and re-tweet
 
 ### After releasing existing GitHub version in Stores
 
@@ -109,14 +129,6 @@ Before releasing, consider [Maintainence chores](#maintainence-chores) first.
 
 For per-platform build/signing setup, see [this article](https://mifi.no/blog/automated-electron-build-with-release-to-mac-app-store-microsoft-store-snapcraft/).
 
-## Weblate
-
-`yarn scan-i18n` to get the newest English strings and push so Weblate gets them.
-
-Find the [latest PR](https://github.com/mifi/lossless-cut/pulls) from Weblate and **rebase+merge** it.
-
-**Warning:** Do not squash and merge (see [here why](docs/translation.md#weblate))!
-
 ## Minimum OS version
 
 See [requirements](docs/requirements.md).
@@ -129,11 +141,7 @@ How to check the value:
 yarn pack-mas-dev
 cat dist/mas-dev-arm64/LosslessCut.app/Contents/Info.plist
 ```
-
-```xml
-<key>LSMinimumSystemVersion</key>
-<string>10.13</string>
-```
+Look for the key `LSMinimumSystemVersion`.
 
 `LSMinimumSystemVersion` can be overridden in `electron-builder` by [`mac.minimumSystemVersion`](https://www.electron.build/configuration/mac.html)
 
@@ -146,16 +154,30 @@ Links:
 
 ## Maintainence chores
 
-### Keep dependencies up to date
-- FFmpeg: [ffmpeg-build-script](https://github.com/mifi/ffmpeg-build-script), [ffmpeg-builds](https://github.com/mifi/ffmpeg-builds) and [package.json](./package.json) download scripts.
+### Upgrade FFmpeg
+
+- [ffmpeg-build-script](https://github.com/mifi/ffmpeg-build-script)
+- [ffmpeg-builds](https://github.com/mifi/ffmpeg-builds)
+- [package.json](./package.json) download scripts.
+
+### Upgrade Electron
+
 - `electron` and upgrade [electron.vite.config.ts](./electron.vite.config.ts) `target`s.
 - `@electron/remote`
-- `package.json` / `yarn.lock`
 
-### i18n
+### Keep dependencies up to date
+
 ```bash
-yarn scan-i18n
+yarn upgrade-interactive
 ```
+
+### i18n strings / Weblate
+
+Run `yarn scan-i18n` to get the newest English strings and push so Weblate gets them.
+
+Find the [latest PR](https://github.com/mifi/lossless-cut/pulls) from Weblate and **rebase+merge** it.
+
+**Warning:** Do not squash and merge (see [here why](docs/translation.md#weblate))!
 
 ### Regenerate licenses file
 
@@ -177,4 +199,4 @@ https://github.com/mifi/lossless-cut/security/dependabot
 
 ## Other
 
-- Update `copyrightYear`
+- Update `copyrightYear` variable and [package.json](./package.json) `copyright`
