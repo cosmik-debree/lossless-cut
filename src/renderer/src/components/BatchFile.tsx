@@ -9,6 +9,31 @@ import useContextMenu from '../hooks/useContextMenu';
 import { dangerColor, primaryColor, primaryTextColor } from '../colors';
 
 const {shell} = window.require('electron');
+const { dialog } = window.require('electron');
+const fs = window.require('fs');
+const patha = window.require('path');
+
+// Function to open the dialog and move the file
+async function moveFile(fsda) {
+    // Open the file dialog
+    const result = await dialog.showOpenDialog({
+        properties: ['openFile']
+    });
+
+    if (!result.canceled && result.filePaths.length > 0) {
+        const sourcePath = fsda;
+        const destinationPath = result.filePaths[0];
+
+        // Move the file
+        fs.rename(sourcePath, destinationPath, (err) => {
+            if (err) {
+                console.error('Error moving file:', err);
+            } else {
+                console.log('File moved successfully to:', destinationPath);
+            }
+        });
+    }
+}
 
 function BatchFile({ path, index, isOpen, isSelected, name, onSelect, onDelete, dragging }: {
   path: string,
@@ -28,6 +53,7 @@ function BatchFile({ path, index, isOpen, isSelected, name, onSelect, onDelete, 
   const contextMenuTemplate = useMemo(() => [
     { label: t('Remove'), click: () => onDelete?.(path) },
     { label: t('Open folder'), click: () => shell.showItemInFolder(path) },
+    { label: t('Move item'), click: () => moveFile(path) },
   ], [t, onDelete, shell, path]);
 
   useContextMenu(ref, contextMenuTemplate);
