@@ -9,20 +9,19 @@ import useContextMenu from '../hooks/useContextMenu';
 import { dangerColor, primaryColor, primaryTextColor } from '../colors';
 
 const {shell} = window.require('electron');
-const { dialog } = window.require('electron');
+const { dialog } = window.require('@electron/remote');
 const fs = window.require('fs');
 const patha = window.require('path');
 
 // Function to open the dialog and move the file
 async function moveFile(fsda) {
     // Open the file dialog
-    const result = await dialog.showOpenDialog({
-        properties: ['openFile']
-    });
+    const result = await dialog.showOpenDialog({properties:['openDirectory'], defaultPath:"G:\\fsd"})
+
 
     if (!result.canceled && result.filePaths.length > 0) {
         const sourcePath = fsda;
-        const destinationPath = result.filePaths[0];
+        const destinationPath = patha.join(result.filePaths[0], patha.basename(fsda));
 
         // Move the file
         fs.rename(sourcePath, destinationPath, (err) => {
